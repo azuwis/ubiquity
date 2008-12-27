@@ -10,11 +10,9 @@ CmdUtils.CreateCommand({
   preview: function( pblock, input ) {
     //var template = "Hello ${name}";
     pblock.innerHTML = "Working...";
-    var contianer = CmdUtils.getDocument().getElementById('slidePlaylist');
-    var li = contianer.getElementsByTagName('li');
     var list = "";
-    for(var i = 0, count = li.length; i < count; ++i) {
-      var iid = li[i].id.substring(8);
+    jQuery(CmdUtils.getDocument()).find("div#slidePlaylist li").each(function(){
+      var iid = this.id.substring(8);
       jQuery.ajax({
         url: 'http://v2.tudou.com/v2/cdn?id=' + iid,
         async: false,
@@ -23,7 +21,7 @@ CmdUtils.CreateCommand({
           list = list + rslt.find("f").eq(0).text() + "\n" + "  out=" + rslt.attr("title") + "\n";
         }
       });
-    }
+    });
     CmdUtils.copyToClipboard(list);
     pblock.innerHTML = "Working...Success! Copied to clipboard.";
     //pblock.innerHTML = CmdUtils.renderTemplate(template, {"name": "World!"});
