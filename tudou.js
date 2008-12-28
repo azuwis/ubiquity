@@ -9,9 +9,16 @@ CmdUtils.CreateCommand({
   //takes: {"input": noun_arb_text},
   preview: function( pblock, input ) {
     //var template = "Hello ${name}";
-    pblock.innerHTML = "Working...";
+    var doc = CmdUtils.getDocument();
+    var uri = Utils.url(doc.documentURI);
+    if (uri.spec.match("http://www.tudou.com/playlist/playindex.do")){
+      pblock.innerHTML = "Working...";
+    } else {
+      pblock.innerHTML = "Preview this command in tudou playlist page.";
+      return;
+    }
     var list = [];
-    jQuery(CmdUtils.getDocument()).find("div#slidePlaylist li").each(function(i){
+    jQuery(doc).find("div#slidePlaylist li").each(function(i){
       var iid = this.id.substring(8);
       jQuery.ajax({
         url: 'http://v2.tudou.com/v2/cdn?id=' + iid,
@@ -27,7 +34,7 @@ CmdUtils.CreateCommand({
     });
     var ariaList = "";
     jQuery.each(list, function(){
-      ariaList = ariaList + this.url + "\n" + "  out=" + this.title + ".flv\n"
+      ariaList += this.url + "\n" + "  out=" + this.title + ".flv\n"
     });
     CmdUtils.copyToClipboard(ariaList);
     pblock.innerHTML = "Working...Success! " + list.length + " items copied to clipboard.";
