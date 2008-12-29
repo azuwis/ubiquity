@@ -17,8 +17,8 @@ CmdUtils.CreateCommand({
         var url = "http://dict.cn/ws.php?q=";
         url += eng_word;
         var pre_template = "<style> #container {background-color: #73bFE6;} #word {font-family: arial black; color: maroon;font-size: x-large;} #explanation {color: midnightblue; font-size: medium; font-family: tahoma;padding:3px;} #sent {color: maroon;} .orig {background-color: #B6C5F2; margin: 1px 0; color: firebrick;} .trans {background-color: #2D4488; color: white; margin: 1px 0;} </style> <div id=\"container\"> <div id=\"word\">${w.word} (${w.prons})</div> <div id=\"explanation\">${w.def}</div>{for foo in w.sents}<div id=\"sent\"> <div class=\"orig\">${foo.orig}</div> <div class=\"trans\">${foo.trans}</div> </div> </div>{/for}";
-        if (eng_word.length < 3) {
-            pblock.innerHTML = "Need at lest 3 chars.";
+        if (eng_word.match("[a-zA-Z]*") && eng_word.length < 3) {
+            pblock.innerHTML = "Need at lest 3 english chars.";
         } else {
             jQuery.get(url,
             function(data) {
