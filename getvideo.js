@@ -10,27 +10,48 @@ CmdUtils.CreateCommand({
     description: "Tudou download list",
     help: "Just preview the command, download list will be copied to clipboard when success.",
     //takes: {"input": noun_arb_text},
+    _getTodouFLVFromIID: function(iid) {
+        var list;
+        jQuery.ajax({
+            url: 'http://v2.tudou.com/v2/cdn?id=' + iid,
+            async: false,
+            success: function(data) {
+                var rslt = jQuery(data).find("v");
+                list = {
+                    url: rslt.find("f").map(function() {
+                        return jQuery(this).text();
+                    }).get(),
+                    title: rslt.attr("title")
+                };
+            }
+        });
+        return list;
+    },
     _handleTudouPlaylist: function(pblock, doc) {
         pblock.innerHTML = "Working...";
         var iidDoc = jQuery(doc).find("div#slidePlaylist li");
         var iidMax = iidDoc.length;
         var list = [];
+        var upthis = this;
         iidDoc.each(function(i) {
             var iid = this.id.substring(8);
-            jQuery.ajax({
-                url: 'http://v2.tudou.com/v2/cdn?id=' + iid,
-                async: false,
-                success: function(data) {
-                    var rslt = jQuery(data).find("v");
-                    list[i] = {
-                        url: rslt.find("f").eq(0).text(),
-                        title: rslt.attr("title")
-                    };
-                }
-            });
-            pblock.innerHTML = "Working..." + i + "/" + iidMax;
+            list[i] = upthis._getTodouFLVFromIID(iid);
+            pblock.innerHTML = "Working..." + (i + 1) + "/" + iidMax;
         });
         return list;
+    },
+    _handleTudouSingleVideo: function(pblock, doc) {
+        var iid = jQuery(doc).find("div.shareButton a").attr("href").match(/iid=(\d+)/)[1];
+        pblock.innerHTML = "Working...";
+        list = this._getTodouFLVFromIID(iid);
+        pblock.innerHTML += "<br/><br/>Title: " + list.title + "<br/>Urls:<br/>" + list.url.join("<br/>") + "<br/>";
+        return [list];
+    },
+    _genAriaList: function(list) {
+        return jQuery.map(list,
+        function(item) {
+            return item.url.join("\t") + "\n" + "  out=" + item.title + ".flv";
+        }).join("\n");
     },
     preview: function(pblock, input) {
         var doc = CmdUtils.getDocument();
@@ -38,17 +59,14 @@ CmdUtils.CreateCommand({
         var list = [];
         if (uri.spec.match("http://www.tudou.com/playlist/playindex.do")) {
             list = this._handleTudouPlaylist(pblock, doc);
+        } else if (uri.spec.match("http://www.tudou.com/programs/view/")) {
+            list = this._handleTudouSingleVideo(pblock, doc);
         } else {
             pblock.innerHTML = "Preview this command in tudou playlist page.";
             return;
         }
-        var ariaList = "";
-        jQuery.each(list,
-        function() {
-            ariaList += this.url + "\n" + "  out=" + this.title + ".flv\n";
-        });
-        CmdUtils.copyToClipboard(ariaList);
-        pblock.innerHTML = "Working...Done! " + list.length + " items copied to clipboard.";
+        CmdUtils.copyToClipboard(this._genAriaList(list));
+        pblock.innerHTML += "<br/>Done! " + list.length + " items copied to clipboard.";
     },
     execute: function(input) {
         CmdUtils.setSelection("You selected: " + input.html);
