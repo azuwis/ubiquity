@@ -92,6 +92,7 @@ CmdUtils.CreateCommand({
         pblock.innerHTML += "<br/>Done! " + list.length + " items copied to clipboard.";
     },
     execute: function(input) {
-        CmdUtils.setSelection("You selected: " + input.html);
+        var url = list.url[0];
+        if (url) Utils.openUrlInBrowser(url);
     }
 });
