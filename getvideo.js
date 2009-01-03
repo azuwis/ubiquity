@@ -1,6 +1,6 @@
 CmdUtils.CreateCommand({
     name: "getvideo",
-    icon: "http://www.tudou.com/favicon.ico",
+    icon: "http://www.adobe.com/images/shared/product_mnemonics/50x50/flash_player_50x50.gif",
     homepage: "http://vi.appspot.com/",
     author: {
         name: "azuwis",
@@ -10,10 +10,15 @@ CmdUtils.CreateCommand({
     description: "Tudou download list",
     help: "Just preview the command, download list will be copied to clipboard when success.",
     //takes: {"input": noun_arb_text},
-    _getTodouFLVFromIID: function(iid) {
+    _getTodouFLVFromIID: function(iid, hd) {
+        if (hd) {
+            url = 'http://v2.tudou.com/v2/kili?id=';
+        } else {
+            url = 'http://v2.tudou.com/v2/cdn?id=';
+        }
         var list;
         jQuery.ajax({
-            url: 'http://v2.tudou.com/v2/cdn?id=' + iid,
+            url: url + iid,
             async: false,
             success: function(data) {
                 var rslt = jQuery(data).find("v");
@@ -40,6 +45,22 @@ CmdUtils.CreateCommand({
         });
         return list;
     },
+    _handleTudouHDPlaylist: function(pblock, doc) {
+        pblock.innerHTML = "Working...";
+        var iidDoc = jQuery(doc).find("script[type=text/javascript]:not([src])").text();
+        var iid = iidDoc.match(/iid:\s"(\d+)"/)[1];
+        list = this._getTodouFLVFromIID(iid, true);
+        pblock.innerHTML = list.url.join("<br/>");
+        //var iidMax = iidDoc.length;
+        //var list = [];
+        //var upthis = this;
+        //iidDoc.each(function(i) {
+        //    var iid = this.id.substring(8);
+        //    list[i] = upthis._getTodouFLVFromIID(iid);
+        //    pblock.innerHTML = "Working..." + (i + 1) + "/" + iidMax;
+        //});
+        return [list];
+    },
     _handleTudouSingleVideo: function(pblock, doc) {
         var iid = jQuery(doc).find("div.shareButton a").attr("href").match(/iid=(\d+)/)[1];
         pblock.innerHTML = "Working...";
@@ -61,6 +82,8 @@ CmdUtils.CreateCommand({
             list = this._handleTudouPlaylist(pblock, doc);
         } else if (uri.spec.match("http://www.tudou.com/programs/view/")) {
             list = this._handleTudouSingleVideo(pblock, doc);
+        } else if (uri.spec.match("http://hd.tudou.com/program/")) {
+            list = this._handleTudouHDPlaylist(pblock, doc);
         } else {
             pblock.innerHTML = "Preview this command in tudou playlist page.";
             return;
