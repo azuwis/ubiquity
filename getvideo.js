@@ -1,3 +1,5 @@
+noun_type_downloadlist = new CmdUtils.NounType("DownloadList", ["aria2", "html"], "aria2");
+
 CmdUtils.CreateCommand({
     name: "getvideo",
     icon: "http://www.adobe.com/images/shared/product_mnemonics/50x50/flash_player_50x50.gif",
@@ -9,7 +11,9 @@ CmdUtils.CreateCommand({
     license: "GPL",
     description: "Tudou download list",
     help: "Just preview the command, download list will be copied to clipboard when success.",
-    //takes: {"input": noun_arb_text},
+    takes: {
+        "download list type": noun_type_downloadlist
+    },
     _getTodouFLVFromIID: function(iid, hd) {
         if (hd) {
             url = 'http://v2.tudou.com/v2/kili?id=';
@@ -74,7 +78,14 @@ CmdUtils.CreateCommand({
             return item.url.join("\t") + "\n" + "  out=" + item.title + ".flv";
         }).join("\n");
     },
+    _genHTMLList: function(list) {
+        var tmpl = "{for i in l}<a href='${i.url[0]}'>${i.title}.flv</a><br/>\n{/for}\n";
+        return CmdUtils.renderTemplate(tmpl, {
+            l: list
+        });
+    },
     preview: function(pblock, input) {
+        var downloadListType = input.text;
         var doc = CmdUtils.getDocument();
         var uri = Utils.url(doc.documentURI);
         var list = [];
@@ -88,8 +99,13 @@ CmdUtils.CreateCommand({
             pblock.innerHTML = "Preview this command in tudou playlist page.";
             return;
         }
-        CmdUtils.copyToClipboard(this._genAriaList(list));
-        pblock.innerHTML += "<br/>Done! " + list.length + " items copied to clipboard.";
+        if (downloadListType == "aria2") {
+            CmdUtils.copyToClipboard(this._genAriaList(list));
+            pblock.innerHTML += "<br/>Done! " + list.length + " items copied to clipboard.";
+        } else if (downloadListType == "html") {
+            jQuery(doc).find("html").html(this._genHTMLList(list));
+            pblock.innerHTML += "<br/>Done! The page has been modified with download links.<br/>You can you use Firefox extensions such as DownThemAll or Flashgot to download them.";
+        }
     },
     execute: function(input) {
         var url = list.url[0];
