@@ -55,14 +55,6 @@ CmdUtils.CreateCommand({
         var iid = iidDoc.match(/iid:\s"(\d+)"/)[1];
         list = this._getTodouFLVFromIID(iid, true);
         pblock.innerHTML = list.url.join("<br/>");
-        //var iidMax = iidDoc.length;
-        //var list = [];
-        //var upthis = this;
-        //iidDoc.each(function(i) {
-        //    var iid = this.id.substring(8);
-        //    list[i] = upthis._getTodouFLVFromIID(iid);
-        //    pblock.innerHTML = "Working..." + (i + 1) + "/" + iidMax;
-        //});
         return [list];
     },
     _handleTudouSingleVideo: function(pblock, doc) {
@@ -109,6 +101,8 @@ CmdUtils.CreateCommand({
     },
     execute: function(input) {
         var url = list.url[0];
-        if (url) Utils.openUrlInBrowser(url);
+        if (url) {
+            Utils.openUrlInBrowser(url);
+        }
     }
 });
