@@ -9,11 +9,12 @@ CmdUtils.CreateCommand({
         email: "azuwis@gmail.com"
     },
     license: "GPL",
-    description: "Tudou download list",
-    help: "Just preview the command, download list will be copied to clipboard when success.",
+    description: "Get media urls",
+    help: "Just preview the command, media urls will be copied to clipboard when success.",
     takes: {
         "download list type": noun_type_downloadlist
     },
+    _data: {},
     _getTodouFLVFromIID: function(iid, hd) {
         if (hd) {
             url = 'http://v2.tudou.com/v2/kili?id=';
@@ -80,29 +81,27 @@ CmdUtils.CreateCommand({
         var downloadListType = input.text;
         var doc = CmdUtils.getDocument();
         var uri = Utils.url(doc.documentURI);
-        var list = [];
         if (uri.spec.match("http://www.tudou.com/playlist/playindex.do")) {
-            list = this._handleTudouPlaylist(pblock, doc);
+            this._data.list = this._handleTudouPlaylist(pblock, doc);
         } else if (uri.spec.match("http://www.tudou.com/programs/view/")) {
-            list = this._handleTudouSingleVideo(pblock, doc);
+            this._data.list = this._handleTudouSingleVideo(pblock, doc);
         } else if (uri.spec.match("http://hd.tudou.com/program/")) {
-            list = this._handleTudouHDPlaylist(pblock, doc);
+            this._data.list = this._handleTudouHDPlaylist(pblock, doc);
         } else {
             pblock.innerHTML = "Preview this command in tudou playlist page.";
             return;
         }
         if (downloadListType == "aria2") {
-            CmdUtils.copyToClipboard(this._genAriaList(list));
-            pblock.innerHTML += "<br/>Done! " + list.length + " items copied to clipboard.";
-        } else if (downloadListType == "html") {
-            jQuery(doc).find("html").html(this._genHTMLList(list));
-            pblock.innerHTML += "<br/>Done! The page has been modified with download links.<br/>You can you use Firefox extensions such as DownThemAll or Flashgot to download them.";
+            CmdUtils.copyToClipboard(this._genAriaList(this._data.list));
+            pblock.innerHTML += "<br/>Done! " + this._data.list.length + " items copied to clipboard." + "<br/>Press Enter to modify this page with download links, for download manager such as DownloadThemAll, Flashgot.";
         }
     },
     execute: function(input) {
-        var url = list.url[0];
-        if (url) {
-            Utils.openUrlInBrowser(url);
+        var doc = CmdUtils.getDocument();
+        if (this._data.list.length == 1) {
+            Utils.openUrlInBrowser(this._data.list[0].url[0]);
+        } else {
+            jQuery(doc).find("html").html(this._genHTMLList(this._data.list));
         }
     }
 });
