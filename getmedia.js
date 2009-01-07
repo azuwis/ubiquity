@@ -1,7 +1,7 @@
 noun_type_downloadlist = new CmdUtils.NounType("DownloadList", ["aria2", "html"], "aria2");
 
 CmdUtils.CreateCommand({
-    name: "getvideo",
+    name: "getmedia",
     icon: "http://www.adobe.com/images/shared/product_mnemonics/50x50/flash_player_50x50.gif",
     homepage: "http://vi.appspot.com/",
     author: {
