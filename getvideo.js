@@ -107,19 +107,31 @@ CmdUtils.CreateCommand({
         var downloadListType = input.text;
         var doc = CmdUtils.getDocument();
         var uri = Utils.url(doc.documentURI);
-        if (uri.spec.match("http://www.tudou.com/playlist/playindex.do")) {
-            this._data.list = this._handleTudouPlaylist(pblock, doc);
-        } else if (uri.spec.match("http://www.tudou.com/programs/view/")) {
-            this._data.list = this._handleTudouSingleVideo(pblock, doc);
-        } else if (uri.spec.match("http://hd.tudou.com/program/")) {
-            this._data.list = this._handleTudouHDPlaylist(pblock, doc);
+        this._data.handler = {
+            "http://www.tudou.com/playlist/playindex.do": this._handleTudouPlaylist,
+            "http://www.tudou.com/programs/view/": this._handleTudouSingleVideo,
+            "http://hd.tudou.com/program/": this._handleTudouHDPlaylist
+        };
+        var handler = null;
+        for (var p in this._data.handler) {
+            if (uri.spec.match(p)) {
+                handler = this._data.handler[p];
+                break;
+            }
+        }
+        if (handler) {
+            this._data.list = handler.call(this, pblock, doc);
         } else {
-            pblock.innerHTML = "Preview this command in tudou playlist page.";
+            var support = [];
+            for (var i in this._data.handler) {
+                support.push("<li>" + i + "</li>");
+            }
+            pblock.innerHTML = "Preview this command in media web page.<br/>Support:<ul>" + support.join("") + "</ul>";
             return;
         }
         if (downloadListType == "aria2") {
             CmdUtils.copyToClipboard(this._genAriaList(this._data.list));
-            pblock.innerHTML += "<br/>Done! " + this._data.list.length + " items copied to clipboard." + "<br/><br/>Press <b>Enter</b> will:<ul><li>Modify this page with download links, for download manager such as DownloadThemAll, Flashgot, if there're multiple media.</li><li>Open the media url in new tab, if there is only one media.</li></ul>";
+            pblock.innerHTML += "<br/>Done! " + this._data.list.length + " items copied to clipboard." + "<br/><br/>Press <b>Enter</b> will:<ul><li>Open media url in new tab, if there is only one media.</li><li>Modify this page with media links, if there're multiple media (for download manager such as DownloadThemAll, Flashgot).</li></ul>";
         }
     },
     execute: function(input) {
