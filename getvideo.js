@@ -16,6 +16,7 @@ CmdUtils.CreateCommand({
     },
     _data: {},
     _getTodouFLVFromIID: function(iid, hd) {
+        var url;
         if (hd) {
             url = 'http://v2.tudou.com/v2/kili?id=';
         } else {
@@ -54,14 +55,14 @@ CmdUtils.CreateCommand({
         pblock.innerHTML = "Working...";
         var iidDoc = jQuery(doc).find("script[type=text/javascript]:not([src])").text();
         var iid = iidDoc.match(/iid:\s"(\d+)"/)[1];
-        list = this._getTodouFLVFromIID(iid, true);
+        var list = this._getTodouFLVFromIID(iid, true);
         pblock.innerHTML = list.url.join("<br/>");
         return [list];
     },
     _handleTudouSingleVideo: function(pblock, doc) {
         var iid = jQuery(doc).find("div.shareButton a").attr("href").match(/iid=(\d+)/)[1];
         pblock.innerHTML = "Working...";
-        list = this._getTodouFLVFromIID(iid);
+        var list = this._getTodouFLVFromIID(iid);
         pblock.innerHTML += "<br/><br/>Title: " + list.title + "<br/>Urls:<br/>" + list.url.join("<br/>") + "<br/>";
         return [list];
     },
