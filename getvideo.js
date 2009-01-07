@@ -53,11 +53,36 @@ CmdUtils.CreateCommand({
     },
     _handleTudouHDPlaylist: function(pblock, doc) {
         pblock.innerHTML = "Working...";
-        var iidDoc = jQuery(doc).find("script[type=text/javascript]:not([src])").text();
-        var iid = iidDoc.match(/iid:\s"(\d+)"/)[1];
-        var list = this._getTodouFLVFromIID(iid, true);
-        pblock.innerHTML = list.url.join("<br/>");
-        return [list];
+        var uri = Utils.url(doc.documentURI);
+        var videoId = uri.spec.match(/program\/(\d+)\//)[1];
+        var list = [];
+        var upthis = this;
+        var pageDoc = jQuery(doc).find("div#edList div.pagebox li")
+        var pageMax = pageDoc.length;
+        pageDoc.each(function(i) {
+            jQuery.ajax({
+                url: "http://hd.tudou.com/ajax/albumVideos.html?videoId=" + videoId + "&pageNumer=" + (i + 1),
+                async: false,
+                success: function(data) {
+                    var urlDoc = jQuery(data).find("a.mylist_hook");
+                    var urlMax = urlDoc.length;
+                    urlDoc.each(function(j) {
+                        var url = "http://hd.tudou.com" + jQuery(this).attr("href");
+                        jQuery.ajax({
+                            url: url,
+                            async: false,
+                            success: function(data){
+                                var index = i * 10 + j;
+                                var iid = data.match(/\siid:\s*"(\d+)",/)[1];
+                                list[index] = upthis._getTodouFLVFromIID(iid, true);
+                                pblock.innerHTML = "Working..." + (index + 1) + "/" + (pageMax * 10 - 10 + urlMax);
+                            }
+                        });
+                    });
+                }
+            });
+        });
+        return list;
     },
     _handleTudouSingleVideo: function(pblock, doc) {
         var iid = jQuery(doc).find("div.shareButton a").attr("href").match(/iid=(\d+)/)[1];
@@ -94,7 +119,7 @@ CmdUtils.CreateCommand({
         }
         if (downloadListType == "aria2") {
             CmdUtils.copyToClipboard(this._genAriaList(this._data.list));
-            pblock.innerHTML += "<br/>Done! " + this._data.list.length + " items copied to clipboard." + "<br/>Press Enter to modify this page with download links, for download manager such as DownloadThemAll, Flashgot.";
+            pblock.innerHTML += "<br/>Done! " + this._data.list.length + " items copied to clipboard." + "<br/><br/>Press <b>Enter</b> will:<ul><li>Modify this page with download links, for download manager such as DownloadThemAll, Flashgot, if there're multiple media.</li><li>Open the media url in new tab, if there is only one media.</li></ul>";
         }
     },
     execute: function(input) {
