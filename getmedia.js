@@ -57,7 +57,7 @@ CmdUtils.CreateCommand({
         var videoId = uri.spec.match(/program\/(\d+)\//)[1];
         var list = [];
         var upthis = this;
-        var pageDoc = jQuery(doc).find("div#edList div.pagebox li")
+        var pageDoc = jQuery(doc).find("div#edList div.pagebox li");
         var pageMax = pageDoc.length;
         pageDoc.each(function(i) {
             jQuery.ajax({
@@ -71,7 +71,7 @@ CmdUtils.CreateCommand({
                         jQuery.ajax({
                             url: url,
                             async: false,
-                            success: function(data){
+                            success: function(data) {
                                 var index = i * 10 + j;
                                 var iid = data.match(/\siid:\s*"(\d+)",/)[1];
                                 list[index] = upthis._getTodouFLVFromIID(iid, true);
@@ -88,7 +88,10 @@ CmdUtils.CreateCommand({
         var iid = jQuery(doc).find("div.shareButton a").attr("href").match(/iid=(\d+)/)[1];
         pblock.innerHTML = "Working...";
         var list = this._getTodouFLVFromIID(iid);
-        pblock.innerHTML += "<br/><br/>Title: " + list.title + "<br/>Urls:<br/>" + list.url.join("<br/>") + "<br/>";
+        var tmpl = "<p>Title: ${list.title}<br/>Urls:<br/>{for i in list.url}${i}<br/>{/for}<p/>";
+        pblock.innerHTML += CmdUtils.renderTemplate(tmpl, {
+            list: list
+        });
         return [list];
     },
     _genAriaList: function(list) {
@@ -98,9 +101,9 @@ CmdUtils.CreateCommand({
         }).join("\n");
     },
     _genHTMLList: function(list) {
-        var tmpl = "{for i in l}<a href='${i.url[0]}'>${i.title}.flv</a><br/>\n{/for}\n";
+        var tmpl = "{for i in list}<a href='${i.url[0]}'>${i.title}.flv</a><br/>\n{/for}\n";
         return CmdUtils.renderTemplate(tmpl, {
-            l: list
+            list: list
         });
     },
     preview: function(pblock, input) {
@@ -126,17 +129,20 @@ CmdUtils.CreateCommand({
             for (var i in this._data.handler) {
                 support.push("<li>" + i + "</li>");
             }
-            pblock.innerHTML = "Preview this command in media web page.<br/>Support:<ul>" + support.join("") + "</ul>";
+            pblock.innerHTML = "Preview this command in media web page.Support:<ul>" + support.join("") + "</ul>";
             return;
         }
-        if (downloadListType == "aria2") {
+        if (downloadListType === "aria2") {
             CmdUtils.copyToClipboard(this._genAriaList(this._data.list));
-            pblock.innerHTML += "<br/>Done! " + this._data.list.length + " items copied to clipboard." + "<br/><br/>Press <b>Enter</b> will:<ul><li>Open media url in new tab, if there is only one media.</li><li>Modify this page with media links, if there're multiple media (for download manager such as DownloadThemAll, Flashgot).</li></ul>";
+            var tmpl = "<p>Done! ${list.length} items copied to clipboard.<p/><p>Press <b>Enter</b> will:<ul><li>Open media url in new tab, if there is only one media.</li><li>Modify this page with media links, if there're multiple media (for download manager such as DownloadThemAll, Flashgot).</li></ul><p/>";
+            pblock.innerHTML += CmdUtils.renderTemplate(tmpl, {
+                list: this._data.list
+            });
         }
     },
     execute: function(input) {
         var doc = CmdUtils.getDocument();
-        if (this._data.list.length == 1) {
+        if (this._data.list.length === 1) {
             Utils.openUrlInBrowser(this._data.list[0].url[0]);
         } else {
             jQuery(doc).find("html").html(this._genHTMLList(this._data.list));
